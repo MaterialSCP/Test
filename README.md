@@ -10,7 +10,7 @@
         .hidden { display: none; }
         #adminLoginBtn { position: absolute; top: 10px; right: 10px; font-size: 12px; padding: 5px; transition: all 0.3s ease; }
         #adminLoginBtn:hover { font-size: 16px; padding: 10px; }
-        #removeMaterialPopup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 20px; border: 1px solid black; }
+        #removeMaterialPanel { display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -26,17 +26,14 @@
         <input type="number" id="materialQuantity" placeholder="Menge" min="1" value="1">
         <button onclick="addMaterial()">Hinzufügen</button>
         
-        <h2>Material entfernen</h2>
-        <button onclick="openRemovePopup()">Entfernen</button>
-    </div>
-
-    <!-- Popup für Material entfernen -->
-    <div id="removeMaterialPopup" class="hidden">
-        <h3>Material entfernen</h3>
-        <select id="removeMaterialSelect"></select>
-        <input type="number" id="removeMaterialQuantity" placeholder="Menge" min="1" value="1">
-        <button onclick="removeMaterial()">Entfernen</button>
-        <button onclick="closeRemovePopup()">Abbrechen</button>
+        <button onclick="toggleRemoveMaterialPanel()">Material entfernen</button>
+        
+        <div id="removeMaterialPanel">
+            <h3>Material entfernen</h3>
+            <select id="removeMaterialSelect"></select>
+            <input type="number" id="removeMaterialQuantity" placeholder="Menge" min="1" value="1">
+            <button onclick="removeMaterial()">Entfernen</button>
+        </div>
     </div>
 
     <h2>Materialanfrage</h2>
@@ -94,9 +91,28 @@
             if (availableMaterials[material] <= 0) delete availableMaterials[material];
             saveData();
             updateMaterialList();
-            closeRemovePopup();  // Popup schließen nach der Aktion
+        }
+
+        function toggleRemoveMaterialPanel() {
+            if (!isAdmin) return;
+            let panel = document.getElementById("removeMaterialPanel");
+            panel.classList.toggle("hidden");
+            if (!panel.classList.contains("hidden")) {
+                updateRemoveMaterialSelect();
+            }
         }
         
+        function updateRemoveMaterialSelect() {
+            let removeMaterialSelect = document.getElementById("removeMaterialSelect");
+            removeMaterialSelect.innerHTML = '';
+            for (let material in availableMaterials) {
+                let option = document.createElement("option");
+                option.value = material;
+                option.textContent = `${material} (${availableMaterials[material]})`;
+                removeMaterialSelect.appendChild(option);
+            }
+        }
+
         function requestItem() {
             let material = document.getElementById("materialSelect").value;
             let quantity = parseInt(document.getElementById("borrowQuantity").value);
@@ -131,7 +147,6 @@
                 let row = table.insertRow();
                 row.innerHTML = `<td>${item.material}</td><td>${item.quantity}</td><td>${item.borrower}</td><td>${item.loanDate}</td><td>${item.returnDate}</td>`;
                 
-                // Nur Admins können die Rückgabe-Aktion sehen
                 if (isAdmin) {
                     row.innerHTML += `<td><button onclick='returnLoanedMaterial(${index})'>Zurückgeben</button></td>`;
                 }
@@ -141,21 +156,14 @@
         function updateMaterialList() {
             let materialSelect = document.getElementById("materialSelect");
             let publicList = document.getElementById("publicAvailableMaterials");
-            let removeMaterialSelect = document.getElementById("removeMaterialSelect");
             materialSelect.innerHTML = '<option value="" disabled selected>Wähle ein Material</option>';
             publicList.innerHTML = '';
-            removeMaterialSelect.innerHTML = '';
             
             for (let material in availableMaterials) {
                 let option = document.createElement("option");
                 option.value = material;
                 option.textContent = `${material} (${availableMaterials[material]})`;
                 materialSelect.appendChild(option);
-                
-                let removeOption = document.createElement("option");
-                removeOption.value = material;
-                removeOption.textContent = material;
-                removeMaterialSelect.appendChild(removeOption);
                 
                 let listItem = document.createElement("li");
                 listItem.textContent = `${material}: ${availableMaterials[material]}`;
@@ -167,17 +175,6 @@
             }
         }
 
-        // Funktion, um das Popup zum Entfernen zu öffnen
-        function openRemovePopup() {
-            if (!isAdmin) return;
-            document.getElementById("removeMaterialPopup").classList.remove("hidden");
-        }
-
-        // Funktion, um das Popup zu schließen
-        function closeRemovePopup() {
-            document.getElementById("removeMaterialPopup").classList.add("hidden");
-        }
-        
         updateMaterialList();
         updateLoanedList();
     </script>
