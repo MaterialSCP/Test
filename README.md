@@ -28,7 +28,7 @@
         
         <button onclick="toggleRemoveMaterialPanel()">Material entfernen</button>
         
-        <div id="removeMaterialPanel">
+        <div id="removeMaterialPanel" class="hidden">
             <h3>Material entfernen</h3>
             <select id="removeMaterialSelect"></select>
             <input type="number" id="removeMaterialQuantity" placeholder="Menge" min="1" value="1">
